@@ -5,6 +5,15 @@ import os
 from PIL import Image
 import google.generativeai as genai 
 import fitz
+from audio import record_audio
+import time
+from pydub import AudioSegment
+from pydub.playback import play
+import speech_recognition as sr
+
+
+# Button to trigger audio recording
+
 
 genai.configure(api_key=os.environ.get('GOOGLE_API_KEY'))
 
@@ -25,6 +34,60 @@ def input_image_details(uploaded_file):
 
 st.set_page_config(page_title='MultiLanguage Invoice Extractor')
 st.header('Gemini App')
+
+
+def wav_to_text():
+    # Initialize the recognizer
+    recognizer = sr.Recognizer()
+    # Path to the WAV file
+    wav_path = "recording0.wav"
+
+    # Load the audio file
+    audio_file = sr.AudioFile(wav_path)
+
+    with audio_file as source:
+        # Adjust for ambient noise and record the audio
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.record(source)
+
+        try:
+            # Use Google Web Speech API to convert audio to text
+            text = recognizer.recognize_google(audio)
+            return text
+        except sr.UnknownValueError:
+            print("Google Web Speech API could not understand the audio.")
+        except sr.RequestError as e:
+            print(f"Could not request results from Google Web Speech API; {e}")
+
+
+
+def show_audio_player(mp3_path):
+
+    # Use st.audio to display audio player controls
+    st.audio(mp3_path, format="audio/mp3", start_time=0)
+    time.sleep(7)
+    st.success("speak")
+    recording = record_audio()
+    st.success("Audio recording completed successfully!")
+ 
+
+# Path to the MP3 file in the same directory
+mp3_path = "welcome.mp3"
+
+# Call the function with the MP3 path
+show_audio_player(mp3_path)
+
+
+import speech_recognition as sr
+
+
+
+# Convert WAV to text
+
+
+
+
+
 input_prompt = st.text_input('Input Prompt', key='input')
 uploaded_file = st.file_uploader('Choose an image or PDF of invoice...', type=["jpg", "jpeg", "png", "pdf"])
 image = None  # Initialize the variable outside the conditional block
@@ -55,3 +118,6 @@ if submit:
         st.write(response)
     else:
         st.warning("Please upload a valid image or PDF file.")
+
+
+
